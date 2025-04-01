@@ -1,10 +1,7 @@
 package ru.solonchev.blogback.persistence.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
@@ -19,7 +16,7 @@ import java.util.*;
 public class Post {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "title", nullable = false)
@@ -28,6 +25,7 @@ public class Post {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User author;
 
     @Column(name = "content", nullable = false)
@@ -37,7 +35,7 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostStatus status;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
