@@ -3,6 +3,7 @@ package ru.solonchev.blogback.web.advice;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.solonchev.blogback.web.dto.ApiErrorResponse;
@@ -34,5 +35,13 @@ public class GlobalExceptionHandler {
                 .setStatus(HttpStatus.CONFLICT.value())
                 .setMessage(exception.getMessage());
         return new ResponseEntity<>(apiErrorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentialsException(BadCredentialsException exception) {
+        ApiErrorResponse error = new ApiErrorResponse()
+                .setStatus(HttpStatus.UNAUTHORIZED.value())
+                .setMessage("Incorrect username or password");
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 }

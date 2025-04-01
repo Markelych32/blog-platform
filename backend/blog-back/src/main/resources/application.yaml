@@ -15,3 +15,5 @@ spring:
     locations: classpath:db/migration
 server:
   port: 8080
+jwt:
+  secret: 9ae82b147c80f3c8250acae18958f96dd522b075aeda6864ab380d95b6be0bc5
