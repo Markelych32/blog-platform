@@ -5,9 +5,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
@@ -30,9 +35,16 @@ public class AuthenticationService {
     private static final Long JWT_EXPIRY_MS = 86400000L;
 
     public UserDetails authenticate(String email, String password) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password));
-        return userDetailsService.loadUserByUsername(email);
+        try {
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password);
+            Authentication authentication = authenticationManager.authenticate(authToken);
+            if (authentication != null && authentication.isAuthenticated()) {
+                return (UserDetails) authentication.getPrincipal();
+            }
+            throw new BadCredentialsException("Неверные учетные данные");
+        } catch (AuthenticationException exception) {
+            throw new BadCredentialsException("Error while authenticate");
+        }
     }
 
     public String generateToken(UserDetails userDetails) {
