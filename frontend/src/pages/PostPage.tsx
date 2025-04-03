@@ -28,8 +28,7 @@ interface PostPageProps {
 }
 
 const PostPage: React.FC<PostPageProps> = ({ 
-  isAuthenticated,
-  currentUserId
+  isAuthenticated
 }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
