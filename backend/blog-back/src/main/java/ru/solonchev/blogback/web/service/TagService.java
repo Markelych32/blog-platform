@@ -1,5 +1,6 @@
 package ru.solonchev.blogback.web.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,5 +49,18 @@ public class TagService {
             }
             tagRepository.deleteById(tagId);
         });
+    }
+
+    public Tag findTagById(UUID tagId) {
+        return tagRepository.findById(tagId)
+                .orElseThrow(() -> new EntityNotFoundException("Tag not found with id: " + tagId));
+    }
+
+    public List<Tag> findTagsByIds(Set<UUID> tagIds) {
+        List<Tag> foundedTags = tagRepository.findAllById(tagIds);
+        if (foundedTags.size() != tagIds.size()) {
+            throw new EntityNotFoundException("Not all specified tag IDs exist");
+        }
+        return foundedTags;
     }
 }

@@ -1,5 +1,6 @@
 package ru.solonchev.blogback.web.advice;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +44,13 @@ public class GlobalExceptionHandler {
                 .setStatus(HttpStatus.UNAUTHORIZED.value())
                 .setMessage("Incorrect username or password");
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleEntityNotFoundException(EntityNotFoundException exception) {
+        ApiErrorResponse error = new ApiErrorResponse()
+                .setStatus(HttpStatus.NOT_FOUND.value())
+                .setMessage("Entity not found");
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 }

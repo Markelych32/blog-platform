@@ -1,6 +1,8 @@
 package ru.solonchev.blogback.web.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.solonchev.blogback.persistence.model.Category;
@@ -42,5 +44,10 @@ public class CategoryService {
             }
             categoryRepository.deleteById(id);
         }
+    }
+
+    public Category findCategoryById(UUID categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + categoryId));
     }
 }
