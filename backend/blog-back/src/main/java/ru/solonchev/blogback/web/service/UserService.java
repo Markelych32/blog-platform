@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.solonchev.blogback.persistence.model.User;
 import ru.solonchev.blogback.persistence.repository.UserRepository;
+import ru.solonchev.blogback.web.dto.UserProfileDto;
 
 import java.util.UUID;
 
@@ -17,5 +18,15 @@ public class UserService {
     public User findUserById(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+    }
+
+    public UserProfileDto getUserProfileById(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        return UserProfileDto.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
     }
 }

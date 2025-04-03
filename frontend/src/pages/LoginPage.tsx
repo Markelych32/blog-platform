@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../services/apiService.ts';
 import { useAuth } from '../components/AuthContext.tsx';
 
 const LoginPage = () => {
@@ -17,8 +16,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await apiService.login({ email, password });
-      login(response);
+      await login(email, password); // Используем напрямую функцию из контекста
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Failed to login. Please try again.');

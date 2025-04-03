@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.solonchev.blogback.web.dto.CategoryDto;
 import ru.solonchev.blogback.web.dto.CreateCategoryRequest;
+import ru.solonchev.blogback.web.dto.UpdateCategoryRequestDto;
 import ru.solonchev.blogback.web.service.CategoryService;
 
 import java.util.List;
@@ -27,6 +28,11 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<CategoryDto> createCategory(@Valid @RequestBody CreateCategoryRequest request) {
         return new ResponseEntity<>(categoryService.createCategory(request), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryDto> updateCategory(@PathVariable UUID id, @RequestBody UpdateCategoryRequestDto requestDto) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, requestDto));
     }
 
     @DeleteMapping("/{id}")

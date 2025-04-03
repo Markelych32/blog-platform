@@ -11,6 +11,13 @@ export interface AuthResponse {
   expiresIn: number;
 }
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -80,28 +87,28 @@ class ApiService {
 
     // Add request interceptor for authentication
     this.api.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        (config: InternalAxiosRequestConfig) => {
+          const token = localStorage.getItem('token');
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+          return config;
+        },
+        (error: AxiosError) => {
+          return Promise.reject(error);
         }
-        return config;
-      },
-      (error: AxiosError) => {
-        return Promise.reject(error);
-      }
     );
 
     // Add response interceptor for error handling
     this.api.interceptors.response.use(
-      (response: AxiosResponse) => response,
-      (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
+        (response: AxiosResponse) => response,
+        (error: AxiosError) => {
+          if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }
+          return Promise.reject(this.handleError(error));
         }
-        return Promise.reject(this.handleError(error));
-      }
     );
   }
 
@@ -124,8 +131,14 @@ class ApiService {
 
   // Auth endpoints
   public async login(credentials: LoginRequest): Promise<AuthResponse> {
+    console.log('Login credentials:', JSON.stringify(credentials));
     const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/login', credentials);
     localStorage.setItem('token', response.data.token);
+    return response.data;
+  }
+
+  public async getUserProfile(): Promise<UserProfile> {
+    const response: AxiosResponse<UserProfile> = await this.api.get('/auth/profile');
     return response.data;
   }
 

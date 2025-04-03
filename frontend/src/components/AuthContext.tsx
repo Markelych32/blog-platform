@@ -32,9 +32,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         try {
-          // TODO: Add endpoint to fetch user profile
-          // const userProfile = await apiService.getUserProfile();
-          // setUser(userProfile);
+          const userProfile = await apiService.getUserProfile();
+          setUser(userProfile);
           setIsAuthenticated(true);
           setToken(storedToken);
         } catch (error) {
@@ -59,8 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
 
       // TODO: Add endpoint to fetch user profile after login
-      // const userProfile = await apiService.getUserProfile();
-      // setUser(userProfile);
+      const userProfile = await apiService.getUserProfile();
+      setUser(userProfile);
     } catch (error) {
       throw error;
     }

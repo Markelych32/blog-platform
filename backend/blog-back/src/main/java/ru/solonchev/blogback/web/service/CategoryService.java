@@ -9,6 +9,7 @@ import ru.solonchev.blogback.persistence.model.Category;
 import ru.solonchev.blogback.persistence.repository.CategoryRepository;
 import ru.solonchev.blogback.web.dto.CategoryDto;
 import ru.solonchev.blogback.web.dto.CreateCategoryRequest;
+import ru.solonchev.blogback.web.dto.UpdateCategoryRequestDto;
 import ru.solonchev.blogback.web.mapper.CategoryMapper;
 
 import java.util.List;
@@ -34,6 +35,12 @@ public class CategoryService {
         return categoryMapper.mapEntityToDto(
                 categoryRepository.save(categoryMapper.mapCreateCategoryRequestToEntity(request))
         );
+    }
+
+    public CategoryDto updateCategory(UUID categoryId, UpdateCategoryRequestDto requestDto) {
+        Category category = findCategoryById(categoryId);
+        category.setName(requestDto.getName());
+        return categoryMapper.mapEntityToDto(categoryRepository.save(category));
     }
 
     public void deleteCategory(UUID id) {
