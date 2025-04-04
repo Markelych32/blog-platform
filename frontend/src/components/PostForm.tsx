@@ -15,7 +15,7 @@ import {
 } from '@nextui-org/react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Heading from '@tiptap/extension-heading';
+import { Heading, Level } from '@tiptap/extension-heading';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
@@ -143,7 +143,7 @@ const PostForm: React.FC<PostFormProps> = ({
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
   };
 
-  const handleHeadingSelect = (level: number) => {
+  const handleHeadingSelect = (level: Level) => {
     editor?.chain().focus().toggleHeading({ level }).run();
   };
 
@@ -179,7 +179,7 @@ const PostForm: React.FC<PostFormProps> = ({
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  onAction={(key) => handleHeadingSelect(Number(key))}
+                  onAction={(key) => handleHeadingSelect(Number(key) as Level)}
                   aria-label="Heading levels"
                 >
                   <DropdownItem key="1" className={editor?.isActive('heading', { level: 1 }) ? 'bg-default-200' : ''}>

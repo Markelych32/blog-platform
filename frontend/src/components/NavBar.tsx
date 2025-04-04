@@ -15,7 +15,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from '@nextui-org/react';
-import { Plus, BookOpen, Edit3, LogOut, User, BookDashed } from 'lucide-react';
+import { Plus, Edit3, LogOut, BookDashed } from 'lucide-react';
 
 interface NavBarProps {
   isAuthenticated: boolean;

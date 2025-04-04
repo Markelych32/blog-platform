@@ -19,9 +19,9 @@ services:
       timeout: 5s
       retries: 5
 
-  blog_backend:
+  backend:
     image: markelych/blog-platform-backend:0.0.1
-    container_name: blog_backend
+    container_name: backend
     ports:
       - "8080:8080"
     environment:
@@ -32,6 +32,15 @@ services:
     depends_on:
       blog_db:
         condition: service_healthy
+
+  blog_frontend:
+    image: markelych/blog-platform-frontend:0.0.1
+    container_name: blog_frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
 
 volumes:
   blog_db_volume: {}
