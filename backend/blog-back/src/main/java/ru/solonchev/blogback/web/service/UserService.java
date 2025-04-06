@@ -20,6 +20,14 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
     }
 
+    public void addUser(User user) {
+        userRepository.save(user);
+    }
+
+    public boolean isExistsByEmail(String email) {
+        return userRepository.existsByEmailIgnoreCase(email);
+    }
+
     public UserProfileDto getUserProfileById(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));

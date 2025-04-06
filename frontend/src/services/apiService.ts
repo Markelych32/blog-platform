@@ -18,6 +18,12 @@ export interface UserProfile {
   avatar?: string;
 }
 
+export interface SignupRequest {
+  email: string;
+  password: string;
+  name: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -57,7 +63,6 @@ export interface CreatePostRequest {
 export interface UpdatePostRequest extends CreatePostRequest {
   id: string;
 }
-
 
 export interface ApiError {
   status: number;
@@ -134,6 +139,11 @@ class ApiService {
     console.log('Login credentials:', JSON.stringify(credentials));
     const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/login', credentials);
     localStorage.setItem('token', response.data.token);
+    return response.data;
+  }
+
+  public async signup(userData: SignupRequest): Promise<string> {
+    const response: AxiosResponse<string> = await this.api.post('/auth/signup', userData);
     return response.data;
   }
 

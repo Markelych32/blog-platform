@@ -2,7 +2,10 @@ package ru.solonchev.blogback.web.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.solonchev.blogback.persistence.model.Category;
@@ -23,11 +26,13 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
+    @Cacheable(value = "categories")
     public List<CategoryDto> getCategories() {
         return categoryMapper.mapListEntityToListDto(categoryRepository.findAllWithPostCount());
     }
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true, condition = "#result != null")
     public CategoryDto createCategory(CreateCategoryRequest request) {
         if (categoryRepository.existsByNameIgnoreCase(request.getName())) {
             throw new IllegalArgumentException("Category already exists with name: " + request.getName());
@@ -37,12 +42,23 @@ public class CategoryService {
         );
     }
 
-    public CategoryDto updateCategory(UUID categoryId, UpdateCategoryRequestDto requestDto) {
-        Category category = findCategoryById(categoryId);
-        category.setName(requestDto.getName());
+    @Caching(
+            evict = @CacheEvict(value = "categories", allEntries = true),
+            put = @CachePut(value = "category", key = "#categoryId")
+    )
+    public CategoryDto updateCategory(UUID categoryId, UpdateCategoryRequestDto request) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + categoryId));
+        category.setName(request.getName());
         return categoryMapper.mapEntityToDto(categoryRepository.save(category));
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "categories", allEntries = true),
+                    @CacheEvict(value = "category", key = "#id")
+            }
+    )
     public void deleteCategory(UUID id) {
         Optional<Category> category = categoryRepository.findById(id);
         if (category.isPresent()) {
@@ -53,6 +69,7 @@ public class CategoryService {
         }
     }
 
+    @Cacheable(value = "category", key = "#categoryId")
     public Category findCategoryById(UUID categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + categoryId));
