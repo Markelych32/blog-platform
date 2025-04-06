@@ -2,6 +2,9 @@ package ru.solonchev.blogback.web.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.solonchev.blogback.persistence.model.Tag;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "tags")
 public class TagService {
 
     private final TagRepository tagRepository;
@@ -28,6 +32,7 @@ public class TagService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public List<TagResponse> createTags(CreateTagsRequest request) {
         Set<String> existingTagNames = tagRepository.findByNameIn(request.getNames()).stream()
                 .map(Tag::getName)
@@ -42,6 +47,7 @@ public class TagService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void deleteTag(UUID tagId) {
         tagRepository.findById(tagId).ifPresent(tag -> {
             if (!tag.getPosts().isEmpty()) {
@@ -51,11 +57,13 @@ public class TagService {
         });
     }
 
+    @Cacheable(key = "#tagId")
     public Tag findTagById(UUID tagId) {
         return tagRepository.findById(tagId)
                 .orElseThrow(() -> new EntityNotFoundException("Tag not found with id: " + tagId));
     }
 
+    @Cacheable(key = "#tagIds.hashCode()")
     public List<Tag> findTagsByIds(Set<UUID> tagIds) {
         List<Tag> foundedTags = tagRepository.findAllById(tagIds);
         if (foundedTags.size() != tagIds.size()) {
