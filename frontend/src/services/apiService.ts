@@ -214,8 +214,16 @@ class ApiService {
   }
 
   // Tags endpoints
-  public async getTags(): Promise<Tag[]> {
-    const response: AxiosResponse<Tag[]> = await this.api.get('/tags');
+  public async getTags(params?: {
+    page?: number;
+    size?: number;
+  }): Promise<{
+    content: Tag[];
+    totalPages: number;
+    totalElements: number;
+    currentPage: number;
+  }> {
+    const response: AxiosResponse = await this.api.get('/tags', { params });
     return response.data;
   }
 

@@ -1,6 +1,8 @@
 package ru.solonchev.blogback.persistence.repository;
 
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -18,7 +20,7 @@ public interface TagRepository extends JpaRepository<Tag, UUID> {
             from Tag t
             left join fetch t.posts
             """)
-    List<Tag> findAllWithPostCount();
+    Page<Tag> findAllWithPostCount(Pageable pageable);
 
     List<Tag> findByNameIn(Set<String> names);
 }

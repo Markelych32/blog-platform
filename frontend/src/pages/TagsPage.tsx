@@ -3,6 +3,7 @@ import {
   Card,
   CardHeader,
   CardBody,
+  CardFooter,
   Button,
   Input,
   Table,
@@ -19,6 +20,7 @@ import {
   ModalFooter,
   Chip,
   Tooltip,
+  Pagination
 } from "@nextui-org/react";
 import { Plus, Trash2, X } from "lucide-react";
 import { apiService, Tag } from "../services/apiService.ts";
@@ -36,15 +38,33 @@ const TagsPage: React.FC<TagsPageProps> = ({ isAuthenticated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const fetchTags = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getTags();
-      setTags(response);
+      const response = await apiService.getTags({
+        page: currentPage,
+        size: pageSize
+      });
+
+      // Check if the response is already in the expected format
+      if (Array.isArray(response)) {
+        // If the backend hasn't been updated yet, just use the old response
+        setTags(response);
+      } else {
+        // If backend returns paginated response
+        setTags(response.content);
+        setTotalPages(response.totalPages);
+      }
+
       setError(null);
     } catch (err) {
       setError("Failed to load tags. Please try again later.");
@@ -72,7 +92,7 @@ const TagsPage: React.FC<TagsPageProps> = ({ isAuthenticated }) => {
 
   const handleDelete = async (tag: Tag) => {
     if (
-      !window.confirm(`Are you sure you want to delete the tag "${tag.name}"?`)
+        !window.confirm(`Are you sure you want to delete the tag "${tag.name}"?`)
     ) {
       return;
     }
@@ -111,124 +131,139 @@ const TagsPage: React.FC<TagsPageProps> = ({ isAuthenticated }) => {
     setNewTags(newTags.filter((tag) => tag !== tagToRemove));
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page - 1); // Convert from 1-based UI to 0-based API
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4">
-      <Card>
-        <CardHeader className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Tags</h1>
-          {isAuthenticated && (
-            <Button
-              color="primary"
-              startContent={<Plus size={16} />}
-              onClick={onOpen}
+      <div className="max-w-4xl mx-auto px-4">
+        <Card>
+          <CardHeader className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Tags</h1>
+            {isAuthenticated && (
+                <Button
+                    color="primary"
+                    startContent={<Plus size={16} />}
+                    onClick={onOpen}
+                >
+                  Add Tags
+                </Button>
+            )}
+          </CardHeader>
+
+          <CardBody>
+            {error && (
+                <div className="mb-4 p-4 text-red-500 bg-red-50 rounded-lg">
+                  {error}
+                </div>
+            )}
+
+            <Table
+                aria-label="Tags table"
+                isHeaderSticky
+                classNames={{
+                  wrapper: "max-h-[600px]",
+                }}
             >
-              Add Tags
-            </Button>
-          )}
-        </CardHeader>
-
-        <CardBody>
-          {error && (
-            <div className="mb-4 p-4 text-red-500 bg-red-50 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <Table
-            aria-label="Tags table"
-            isHeaderSticky
-            classNames={{
-              wrapper: "max-h-[600px]",
-            }}
-          >
-            <TableHeader>
-              <TableColumn>NAME</TableColumn>
-              <TableColumn>POST COUNT</TableColumn>
-              <TableColumn>ACTIONS</TableColumn>
-            </TableHeader>
-            <TableBody
-              isLoading={loading}
-              loadingContent={<div>Loading tags...</div>}
-            >
-              {tags.map((tag) => (
-                <TableRow key={tag.id}>
-                  <TableCell>{tag.name}</TableCell>
-                  <TableCell>{tag.postCount || 0}</TableCell>
-                  <TableCell>
-                    {isAuthenticated ? (
-                      <Tooltip
-                        content={
-                          tag.postCount
-                            ? "Cannot delete tag with existing posts"
-                            : "Delete tag"
-                        }
-                      >
-                        <Button
-                          isIconOnly
-                          variant="flat"
-                          color="danger"
-                          size="sm"
-                          onClick={() => handleDelete(tag)}
-                          isDisabled={
-                            tag?.postCount ? tag.postCount > 0 : false
-                          }
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </Tooltip>
-                    ) : (
-                      <span>-</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardBody>
-      </Card>
-
-      <Modal isOpen={isOpen} onClose={handleModalClose}>
-        <ModalContent>
-          <ModalHeader>Add Tags</ModalHeader>
-          <ModalBody>
-            <div className="space-y-4">
-              <Input
-                label="Enter tags"
-                placeholder="Type and press Enter or comma to add tags"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagInputKeyDown}
-              />
-              <div className="flex flex-wrap gap-2">
-                {newTags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    onClose={() => handleRemoveNewTag(tag)}
-                    variant="flat"
-                    endContent={<X size={14} />}
-                  >
-                    {tag}
-                  </Chip>
+              <TableHeader>
+                <TableColumn>NAME</TableColumn>
+                <TableColumn>POST COUNT</TableColumn>
+                <TableColumn>ACTIONS</TableColumn>
+              </TableHeader>
+              <TableBody
+                  isLoading={loading}
+                  loadingContent={<div>Loading tags...</div>}
+              >
+                {tags.map((tag) => (
+                    <TableRow key={tag.id}>
+                      <TableCell>{tag.name}</TableCell>
+                      <TableCell>{tag.postCount || 0}</TableCell>
+                      <TableCell>
+                        {isAuthenticated ? (
+                            <Tooltip
+                                content={
+                                  tag.postCount
+                                      ? "Cannot delete tag with existing posts"
+                                      : "Delete tag"
+                                }
+                            >
+                              <Button
+                                  isIconOnly
+                                  variant="flat"
+                                  color="danger"
+                                  size="sm"
+                                  onClick={() => handleDelete(tag)}
+                                  isDisabled={
+                                    tag?.postCount ? tag.postCount > 0 : false
+                                  }
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </Tooltip>
+                        ) : (
+                            <span>-</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </CardBody>
+
+          {totalPages > 1 && (
+              <CardFooter className="flex justify-center">
+                <Pagination
+                    total={totalPages}
+                    page={currentPage + 1}
+                    onChange={handlePageChange}
+                    showControls
+                />
+              </CardFooter>
+          )}
+        </Card>
+
+        <Modal isOpen={isOpen} onClose={handleModalClose}>
+          <ModalContent>
+            <ModalHeader>Add Tags</ModalHeader>
+            <ModalBody>
+              <div className="space-y-4">
+                <Input
+                    label="Enter tags"
+                    placeholder="Type and press Enter or comma to add tags"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagInputKeyDown}
+                />
+                <div className="flex flex-wrap gap-2">
+                  {newTags.map((tag) => (
+                      <Chip
+                          key={tag}
+                          onClose={() => handleRemoveNewTag(tag)}
+                          variant="flat"
+                          endContent={<X size={14} />}
+                      >
+                        {tag}
+                      </Chip>
+                  ))}
+                </div>
               </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onClick={handleModalClose}>
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              onClick={handleAddTags}
-              isLoading={isSubmitting}
-              isDisabled={newTags.length === 0}
-            >
-              Add Tags
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="flat" onClick={handleModalClose}>
+                Cancel
+              </Button>
+              <Button
+                  color="primary"
+                  onClick={handleAddTags}
+                  isLoading={isSubmitting}
+                  isDisabled={newTags.length === 0}
+              >
+                Add Tags
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </div>
   );
 };
 

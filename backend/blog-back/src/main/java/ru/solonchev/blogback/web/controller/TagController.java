@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.solonchev.blogback.web.dto.CreateTagsRequest;
 import ru.solonchev.blogback.web.dto.TagResponse;
+import ru.solonchev.blogback.web.dto.TagResponseWithPagination;
 import ru.solonchev.blogback.web.service.TagService;
 
 import java.util.List;
@@ -19,8 +20,10 @@ public class TagController {
     private final TagService tagService;
 
     @GetMapping
-    public ResponseEntity<List<TagResponse>> findAllTags() {
-        return ResponseEntity.ok(tagService.findAllTags());
+    public ResponseEntity<TagResponseWithPagination> findAllTags(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size) {
+        return ResponseEntity.ok(tagService.findAllTags(page, size));
     }
 
     @PostMapping

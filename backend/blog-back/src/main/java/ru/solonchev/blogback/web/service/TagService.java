@@ -2,15 +2,20 @@ package ru.solonchev.blogback.web.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.solonchev.blogback.persistence.model.Tag;
 import ru.solonchev.blogback.persistence.repository.TagRepository;
 import ru.solonchev.blogback.web.dto.CreateTagsRequest;
 import ru.solonchev.blogback.web.dto.TagResponse;
+import ru.solonchev.blogback.web.dto.TagResponseWithPagination;
 import ru.solonchev.blogback.web.mapper.TagMapper;
 
 import java.util.ArrayList;
@@ -22,13 +27,25 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "tags")
+@Slf4j
 public class TagService {
 
     private final TagRepository tagRepository;
     private final TagMapper tagMapper;
 
-    public List<TagResponse> findAllTags() {
-        return tagMapper.mapToListTagResponse(tagRepository.findAllWithPostCount());
+    @Cacheable(value = "tagsCache", key = "'tags_page_' + #page + '_size_' + #size")
+    public TagResponseWithPagination findAllTags(int page, int size) {
+        log.info("Find All Tags method");
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Tag> tagPage = tagRepository.findAllWithPostCount(pageable);
+        List<TagResponse> result = tagPage.getContent().stream()
+                .map(tagMapper::mapToTagResponse)
+                .toList();
+        return new TagResponseWithPagination()
+                .setContent(result)
+                .setTotalPages(tagPage.getTotalPages())
+                .setTotalElements(tagPage.getTotalElements())
+                .setCurrentPage(page);
     }
 
     @Transactional
