@@ -78,6 +78,13 @@ export enum PostStatus {
   PUBLISHED = 'PUBLISHED'
 }
 
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  currentPage: number;
+}
+
 class ApiService {
   private api: AxiosInstance;
   private static instance: ApiService;
@@ -217,14 +224,22 @@ class ApiService {
   public async getTags(params?: {
     page?: number;
     size?: number;
-  }): Promise<{
-    content: Tag[];
-    totalPages: number;
-    totalElements: number;
-    currentPage: number;
-  }> {
-    const response: AxiosResponse = await this.api.get('/tags', { params });
-    return response.data;
+  }): Promise<Tag[] | PaginatedResponse<Tag>> {
+    try {
+      const response: AxiosResponse = await this.api.get('/tags', { params });
+
+      // Check if the response is in the paginated format
+      if (response.data && typeof response.data === 'object' && 'content' in response.data) {
+        // Return the paginated response
+        return response.data as PaginatedResponse<Tag>;
+      }
+
+      // If not paginated, return the array directly
+      return response.data as Tag[];
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      throw error;
+    }
   }
 
   public async createTags(names: string[]): Promise<Tag[]> {

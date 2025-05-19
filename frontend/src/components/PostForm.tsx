@@ -7,7 +7,6 @@ import {
   Select,
   SelectItem,
   Chip,
-  SelectSection,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
@@ -133,14 +132,15 @@ const PostForm: React.FC<PostFormProps> = ({
     });
   };
 
-  const handleTagAdd = (tag: Tag) => {
-    if (tag && !selectedTags.some(selectedTag => selectedTag.id === tag.id) && selectedTags.length < 10) {
+  const handleTagAdd = (tagId: string) => {
+    const tag = availableTags.find(t => t.id === tagId);
+    if (tag && !selectedTags.some(selectedTag => selectedTag.id === tag.id)) {
       setSelectedTags([...selectedTags, tag]);
     }
   };
 
   const handleTagRemove = (tagToRemove: Tag) => {
-    setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+    setSelectedTags(selectedTags.filter(tag => tag.id !== tagToRemove.id));
   };
 
   const handleHeadingSelect = (level: number) => {
@@ -149,12 +149,10 @@ const PostForm: React.FC<PostFormProps> = ({
     editor?.chain().focus().toggleHeading({ level: headingLevel }).run();
   };
 
-  // Ensure availableTags is an array before filtering
-  // Show all available tags, not just the first 5
-  const suggestedTags = Array.isArray(availableTags)
-      ? availableTags
-          .filter(tag => !selectedTags.some(selectedTag => selectedTag.id === tag.id))
-      : [];
+  // Get available tags that aren't already selected
+  const suggestedTags = availableTags.filter(
+      tag => !selectedTags.some(selectedTag => selectedTag.id === tag.id)
+  );
 
   return (
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -286,24 +284,23 @@ const PostForm: React.FC<PostFormProps> = ({
             <div className="space-y-2">
               <Select
                   label="Add Tags"
-                  selectedKeys={selectedTags.map(tag => tag.id)}
-                  //isSearchable
-                  placeholder="Search and select tags"
+                  placeholder="Select a tag"
+                  onChange={(e) => handleTagAdd(e.target.value)}
                   classNames={{
                     listboxWrapper: "max-h-[200px] overflow-auto" // Enable scrolling
                   }}
               >
-                <SelectSection>
-                  {suggestedTags.map((tag) => (
-                      <SelectItem
-                          key={tag.id}
-                          value={tag.id}
-                          onClick={() => handleTagAdd(tag)}
-                      >
-                        {tag.name}
-                      </SelectItem>
-                  ))}
-                </SelectSection>
+                {suggestedTags.length > 0 ? (
+                    suggestedTags.map((tag) => (
+                        <SelectItem key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </SelectItem>
+                    ))
+                ) : (
+                    <SelectItem key="no-tags" isDisabled>
+                      No more tags available or all are selected
+                    </SelectItem>
+                )}
               </Select>
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedTags.map((tag) => (
