@@ -128,7 +128,7 @@ const PostForm: React.FC<PostFormProps> = ({
       content: editor?.getHTML() || '',
       categoryId: categoryId,
       tagIds: selectedTags.map(tag => tag.id),
-      status,
+      status: status || PostStatus.DRAFT,
     });
   };
 
@@ -319,7 +319,7 @@ const PostForm: React.FC<PostFormProps> = ({
             <div className="space-y-2">
               <Select
                   label="Status"
-                  selectedKeys={[status]}
+                  selectedKeys={status ? [status] : [PostStatus.DRAFT]} // Добавлен запасной вариант
                   onChange={(e) => setStatus(e.target.value as PostStatus)}
               >
                 <SelectItem key={PostStatus.DRAFT} value={PostStatus.DRAFT}>

@@ -120,7 +120,7 @@ const PostList: React.FC<PostListProps> = ({
                     <h2 className="text-xl font-bold text-left">
                       {post.title}
                     </h2>
-                    <p className="text-small text-default-500">
+                    <p className="text-small text-default-500 text-left">
                       by {post.author?.name}
                     </p>                
                     </div>

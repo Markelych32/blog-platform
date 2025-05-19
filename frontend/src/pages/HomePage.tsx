@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Card, 
-  CardHeader, 
+import {
+  Card,
+  CardHeader,
   CardBody,
-  Tabs, 
+  Tabs,
   Tab,
 } from '@nextui-org/react';
 import { apiService, Post, Category, Tag } from '../services/apiService.ts';
@@ -24,18 +24,27 @@ const HomePage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [postsResponse, categoriesResponse, tagsResponse] = await Promise.all([
-          apiService.getPosts({      
-            categoryId: selectedCategory != undefined ? selectedCategory : undefined,
-            tagId: selectedTag || undefined
-          }),
+        // Fetch categories and posts
+        const [categoriesResponse, tagsResponse, postsResponse] = await Promise.all([
           apiService.getCategories(),
-          apiService.getTags()
+          apiService.getTags(),
+          apiService.getPosts({
+            categoryId: selectedCategory !== undefined ? selectedCategory : undefined,
+            tagId: selectedTag || undefined
+          })
         ]);
 
-        setPosts(postsResponse);
+        // Set categories and posts
         setCategories(categoriesResponse);
-        setTags(tagsResponse);
+        setPosts(postsResponse);
+
+        // Handle different response formats for tags
+        if (Array.isArray(tagsResponse)) {
+          setTags(tagsResponse);
+        } else if (tagsResponse && typeof tagsResponse === 'object' && 'content' in tagsResponse) {
+          setTags(tagsResponse.content);
+        }
+
         setError(null);
       } catch (err) {
         setError('Failed to load content. Please try again later.');
@@ -48,72 +57,72 @@ const HomePage: React.FC = () => {
   }, [page, sortBy, selectedCategory, selectedTag]);
 
   const handleCategoryChange = (categoryId: string|undefined) => {
-    if("all" === categoryId){
-      setSelectedCategory(undefined)
+    if (categoryId === "all") {
+      setSelectedCategory(undefined);
     } else {
       setSelectedCategory(categoryId);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 space-y-6">
-      <Card className="mb-6 px-2">
-        <CardHeader>
-          <h1 className="text-2xl font-bold">Blog Posts</h1>
-        </CardHeader>
-        <CardBody>
-          <div className="flex flex-col gap-4">                     
-            <Tabs 
-              selectedKey={selectedCategory} 
-              onSelectionChange={(key) => {
-                handleCategoryChange(key as string)
-              }}
-              variant="underlined"
-              classNames={{
-                tabList: "gap-6",
-                cursor: "w-full bg-primary",
-              }}
-            >
-              <Tab key="all" title="All Posts" />
-              {categories.map((category) => (
-                <Tab 
-                  key={category.id} 
-                  title={`${category.name} (${category.postCount})`}
-                />
-              ))}
-            </Tabs>
-
-            {tags.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                {tags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    onClick={() => setSelectedTag(selectedTag == tag.id ? undefined : tag.id)}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      selectedTag === tag.id
-                        ? 'bg-primary text-white'
-                        : 'bg-default-100 hover:bg-default-200'
-                    }`}
-                  >
-                    {tag.name} ({tag.postCount})
-                  </button>
+      <div className="max-w-6xl mx-auto px-4 space-y-6">
+        <Card className="mb-6 px-2">
+          <CardHeader>
+            <h1 className="text-2xl font-bold">Blog Posts</h1>
+          </CardHeader>
+          <CardBody>
+            <div className="flex flex-col gap-4">
+              <Tabs
+                  selectedKey={selectedCategory}
+                  onSelectionChange={(key) => {
+                    handleCategoryChange(key as string);
+                  }}
+                  variant="underlined"
+                  classNames={{
+                    tabList: "gap-6",
+                    cursor: "w-full bg-primary",
+                  }}
+              >
+                <Tab key="all" title="All Posts" />
+                {categories.map((category) => (
+                    <Tab
+                        key={category.id}
+                        title={`${category.name} (${category.postCount || 0})`}
+                    />
                 ))}
-              </div>
-            )}
-          </div>
-        </CardBody>
-      </Card>
+              </Tabs>
 
-      <PostList
-        posts={posts}
-        loading={loading}
-        error={error}
-        page={page}
-        sortBy={sortBy}
-        onPageChange={setPage}
-        onSortChange={setSortBy}
-      />
-    </div>
+              {tags.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {tags.map((tag) => (
+                        <button
+                            key={tag.id}
+                            onClick={() => setSelectedTag(selectedTag === tag.id ? undefined : tag.id)}
+                            className={`px-3 py-1 rounded-full text-sm ${
+                                selectedTag === tag.id
+                                    ? 'bg-primary text-white'
+                                    : 'bg-default-100 hover:bg-default-200'
+                            }`}
+                        >
+                          {tag.name} ({tag.postCount || 0})
+                        </button>
+                    ))}
+                  </div>
+              )}
+            </div>
+          </CardBody>
+        </Card>
+
+        <PostList
+            posts={posts}
+            loading={loading}
+            error={error}
+            page={page}
+            sortBy={sortBy}
+            onPageChange={setPage}
+            onSortChange={setSortBy}
+        />
+      </div>
   );
 };
 
