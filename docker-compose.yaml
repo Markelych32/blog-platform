@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  blog_db:
+    image: postgres:14
+    container_name: blog_db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: blog-platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - blog_db_volume:/var/lib/postgresql/data'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U bloguser -d blogdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: markelych/blog-platform-backend:0.0.1
+    container_name: backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://blog_db:5432/blog-platform
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+    restart: unless-stopped
+    depends_on:
+      blog_db:
+        condition: service_healthy
+
+  blog_frontend:
+    image: markelych/blog-platform-frontend:0.0.1
+    container_name: blog_frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  blog_db_volume: {}
